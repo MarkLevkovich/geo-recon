@@ -1,0 +1,7 @@
+# GeoRecon configuration
+# CLI arguments override these values
+
+host: "0.0.0.0"
+port: 8000
+log_level: "info"
+no_access_log: false
