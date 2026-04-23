@@ -1,0 +1,13 @@
+{
+  "templates": [
+    {
+      "name": "Telegram",
+      "dir_name": "telegram",
+      "defaults": {
+        "group_name": "new_group",
+        "member_count": 24,
+        "member_online": 7
+      }
+    }
+  ]
+}

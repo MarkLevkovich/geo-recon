@@ -2,6 +2,7 @@
 """GeoRecon CLI entry point."""
 
 import argparse
+import json
 import logging
 import sys
 from pathlib import Path
@@ -29,6 +30,13 @@ def load_config(path: str) -> dict:
             return data if isinstance(data, dict) else {}
     except yaml.YAMLError:
         return {}
+
+def load_registry() -> dict:
+    p = Path("templates/meta.json")
+    if not p.exists():
+        print("[!] templates/meta.json not found", file=sys.stderr)
+        sys.exit(1)
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 def parse_args() -> argparse.Namespace:
@@ -88,8 +96,40 @@ def main() -> None:
 
     config = merge_config(args)
 
+    registry = load_registry()
+    templates = registry.get("templates", [])
+    if not templates:
+        logging.error("No templates found")
+        sys.exit(1)
+
+    logging.info("Select template:")
+    for i, t in enumerate(templates):
+        logging.info(f"  [{i}] {t['name']}")
+
+    try:
+
+        idx = int(input("[>] "))
+        if not (0 <= idx < len(templates)):
+            raise ValueError
+    except (ValueError, IndexError):
+        logging.error("Invalid input")
+        sys.exit(1)
+
+    selected = templates[idx]
+    dir_name = selected["dir_name"]
+    defaults = selected.get("defaults", {}).copy()
+
+    logging.info(f"Configuring '{selected['name']}':")
+    context = {}
+    for key, default_val in defaults.items():
+        prompt = f"  • {key} [{default_val}]: "
+        val = input(prompt).strip()
+        context[key] = val if val else default_val
+
     try:
         from server.main import app as geo_app
+        geo_app.state.template_dir = f"templates/{dir_name}"
+        geo_app.state.context = context
     except ImportError as e:
         logging.error(f"Failed to import application: {e}")
         sys.exit(1)
@@ -98,7 +138,7 @@ def main() -> None:
         "app": geo_app,
         "host": config["host"],
         "port": config["port"],
-        "log_level": "error",  # Only real errors from uvicorn
+        "log_level": "error",
         "log_config": None,
         "use_colors": False,
         "access_log": not config["no_access_log"],
