@@ -19,7 +19,8 @@ from starlette.templating import _TemplateResponse
 def print_banner():
     font = "slant"
     ascii_banner = pyfiglet.figlet_format("GeoRecon", font=font)
-    print(Fore.GREEN + ascii_banner)
+    print(Fore.RED + ascii_banner)
+    print(Fore.GREEN)
     print("Welcome you here!\n")
 
 
@@ -155,10 +156,11 @@ def main() -> None:
         try:
             uvicorn.run(**uvicorn_kwargs)
         except KeyboardInterrupt:
-            logging.info("Shutdown requested")
+            logging.info("Interrupted by user")
         except Exception as e:
-            logging.critical(f"Server error: {e}")
-            sys.exit(1)
+            logging.error(f"Server stopped unexpectedly: {e}")
+        finally:
+            logging.info("Server has been shut down gracefully. Bye!")
     except KeyboardInterrupt:
         logging.info("Shutdown requested, bye...")
     except Exception as e:
