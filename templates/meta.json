@@ -7,7 +7,7 @@
         "group_name": "New_group",
         "member_count": 15,
         "member_online": 5,
-        "image": "/templates/telegram/static/avatar.jpg",
+        "image": "static/avatar.jpg",
         "redirect_url": "https://web.telegram.org"
       }
     }

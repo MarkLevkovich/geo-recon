@@ -7,15 +7,30 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+    <header class="tg-header">
+        <div class="logo-area">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#32A8E6"/>
+                <path d="M5.44 11.66L18.4 6.66C19.01 6.43 19.54 6.81 19.34 7.46L17.13 17.88C16.96 18.61 16.53 18.79 15.92 18.45L12.58 15.98L10.97 17.53C10.79 17.71 10.64 17.86 10.33 17.86L10.57 14.45L16.78 8.84C17.05 8.6 16.72 8.46 16.36 8.7L8.68 13.53L5.34 12.49C4.62 12.26 4.6 11.76 5.44 11.66Z" fill="white"/>
+            </svg>
+            <span>Telegram</span>
+        </div>
+        <a href="#" class="download-btn">DOWNLOAD</a>
+    </header>
+
     <div class="container">
         <div class="card">
             <img src="{{ image }}" alt="Avatar" class="avatar">
             <h1>{{ group_name }}</h1>
+
             <div class="stats">
                 <span>{{ member_count }} subscribers</span>
                 <span class="online">{{ member_online }} online</span>
             </div>
+
             <button id="viewBtn" class="btn">VIEW IN TELEGRAM</button>
+            <div class="preview-link">Preview channel</div>
+
             <p id="status" class="status"></p>
         </div>
     </div>

@@ -1,80 +1,154 @@
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0e1621;
+    margin: 0;
+    padding: 0;
+    background-color: #0f0f0f;
+    background-image: url('../bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #ffffff;
+}
+
+/* Шапка (Header) */
+.tg-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 54px;
+    background-color: rgba(15, 15, 15, 0.85); /* Полупрозрачный темный фон */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 100;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    color: #fff;
+}
+
+.download-btn {
+    background-color: #32A8E6;
+    color: #fff;
+    text-decoration: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.download-btn:hover {
+    background-color: #2b93c8;
+}
+
+/* Контейнер и Карточка */
+.container {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.container {
-    width: 100%;
-    max-width: 400px;
-    padding: 20px;
+    padding: 70px 20px 20px; /* Отступ сверху из-за шапки */
 }
 
 .card {
-    background: #17212b;
+    background-color: #212121;
+    width: 100%;
+    max-width: 360px;
     border-radius: 12px;
-    padding: 40px 30px;
+    padding: 32px 24px 24px;
     text-align: center;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .avatar {
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
-    margin-bottom: 20px;
+    object-fit: cover;
+    margin-bottom: 16px;
 }
 
 h1 {
-    color: white;
     font-size: 22px;
-    margin-bottom: 10px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
 }
 
+/* Статистика (подписчики и онлайн) */
 .stats {
-    color: #7aa3c3;
+    color: #7f8b93;
     font-size: 14px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.stats span {
-    margin: 0 10px;
+/* Точка-разделитель перед онлайном, если он есть */
+.online::before {
+    content: "•";
+    margin-right: 8px;
+    color: #7f8b93;
 }
 
-.stats .online {
-    color: #4ac959;
-}
-
+/* Кнопка */
 .btn {
-    background: #3390ec;
-    color: white;
+    background-color: #32A8E6;
+    color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 14px 32px;
+    border-radius: 24px;
+    padding: 14px 24px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     width: 100%;
+    text-transform: uppercase;
+    transition: background-color 0.2s;
 }
 
 .btn:hover {
-    background: #2b7fd1;
+    background-color: #2b93c8;
 }
 
 .btn:disabled {
-    opacity: 0.6;
+    background-color: #1a5678;
+    color: #888;
     cursor: not-allowed;
 }
 
+/* Ссылка под кнопкой */
+.preview-link {
+    display: block;
+    color: #7f8b93;
+    font-size: 14px;
+    margin-top: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.preview-link:hover {
+    color: #ffffff;
+}
+
+/* Текст статуса выполнения скрипта */
 .status {
-    margin-top: 15px;
+    margin: 12px 0 0 0;
     font-size: 13px;
+    min-height: 16px;
 }
