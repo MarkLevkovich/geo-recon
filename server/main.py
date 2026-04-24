@@ -1,13 +1,17 @@
+import datetime
+import json
+import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
+from colorama import Fore, Style
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
+from server.geo_router import router as geo_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -16,6 +20,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     static_dir: str = f"{template_dir}/static"
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    app.mount("/js", StaticFiles(directory="js"), name="js")
 
     yield
 
@@ -70,3 +75,6 @@ async def serve_frontend(request: Request) -> Any:
         name="index.html",
         context=context,
     )
+
+
+app.include_router(geo_router)
