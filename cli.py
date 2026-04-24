@@ -17,6 +17,7 @@ def print_banner():
     font = "slant"
     ascii_banner = pyfiglet.figlet_format("GeoRecon", font=font)
     print(Fore.GREEN + ascii_banner)
+    print("Welcome you here!\n")
 
 
 def load_config(path: str) -> dict:
@@ -30,6 +31,7 @@ def load_config(path: str) -> dict:
             return data if isinstance(data, dict) else {}
     except yaml.YAMLError:
         return {}
+
 
 def load_registry() -> dict:
     p = Path("templates/meta.json")
@@ -65,7 +67,7 @@ def parse_args() -> argparse.Namespace:
 
 def setup_logging(level: str) -> None:
     """Configure logging: only GeoRecon logs to stderr."""
-    fmt = "%(asctime)s | %(levelname)-8s | %(message)s"
+    fmt = "%(message)s"
     logging.basicConfig(
         level=getattr(logging, level.upper()),
         format=fmt,
@@ -90,69 +92,74 @@ def merge_config(cli_args: argparse.Namespace) -> dict:
 
 
 def main() -> None:
-    args = parse_args()
-    setup_logging(args.log_level)
-    print_banner()
-
-    config = merge_config(args)
-
-    registry = load_registry()
-    templates = registry.get("templates", [])
-    if not templates:
-        logging.error("No templates found")
-        sys.exit(1)
-
-    logging.info("Select template:")
-    for i, t in enumerate(templates):
-        logging.info(f"  [{i}] {t['name']}")
-
     try:
+        args = parse_args()
+        setup_logging(args.log_level)
+        print_banner()
 
-        idx = int(input("[>] "))
-        if not (0 <= idx < len(templates)):
-            raise ValueError
-    except (ValueError, IndexError):
-        logging.error("Invalid input")
-        sys.exit(1)
+        config = merge_config(args)
 
-    selected = templates[idx]
-    dir_name = selected["dir_name"]
-    defaults = selected.get("defaults", {}).copy()
+        registry = load_registry()
+        templates = registry.get("templates", [])
+        if not templates:
+            logging.error("No templates found")
+            sys.exit(1)
 
-    logging.info(f"Configuring '{selected['name']}':")
-    context = {}
-    for key, default_val in defaults.items():
-        prompt = f"  • {key} [{default_val}]: "
-        val = input(prompt).strip()
-        context[key] = val if val else default_val
+        logging.info("Select template:")
+        for i, t in enumerate(templates):
+            logging.info(f"  [{i}] {t['name']}")
 
-    try:
-        from server.main import app as geo_app
-        geo_app.state.template_dir = f"templates/{dir_name}"
-        geo_app.state.context = context
-    except ImportError as e:
-        logging.error(f"Failed to import application: {e}")
-        sys.exit(1)
+        try:
 
-    uvicorn_kwargs = {
-        "app": geo_app,
-        "host": config["host"],
-        "port": config["port"],
-        "log_level": "error",
-        "log_config": None,
-        "use_colors": False,
-        "access_log": not config["no_access_log"],
-    }
+            idx = int(input("[>] "))
+            if not (0 <= idx < len(templates)):
+                raise ValueError
+        except (ValueError, IndexError):
+            logging.error("Invalid input")
+            sys.exit(1)
 
-    logging.info(f"Listening on http://{config['host']}:{config['port']}")
+        selected = templates[idx]
+        dir_name = selected["dir_name"]
+        defaults = selected.get("defaults", {}).copy()
 
-    try:
-        uvicorn.run(**uvicorn_kwargs)
+        logging.info(f"Configuring '{selected['name']}':")
+        context = {}
+        for key, default_val in defaults.items():
+            prompt = f"  • {key} [{default_val}]: "
+            val = input(prompt).strip()
+            context[key] = val if val else default_val
+
+        try:
+            from server.main import app as geo_app
+            geo_app.state.template_dir = f"templates/{dir_name}"
+            geo_app.state.context = context
+        except ImportError as e:
+            logging.error(f"Failed to import application: {e}")
+            sys.exit(1)
+
+        uvicorn_kwargs = {
+            "app": geo_app,
+            "host": config["host"],
+            "port": config["port"],
+            "log_level": "error",
+            "log_config": None,
+            "use_colors": False,
+            "access_log": not config["no_access_log"],
+        }
+
+        logging.info(f"Listening on http://{config['host']}:{config['port']}")
+
+        try:
+            uvicorn.run(**uvicorn_kwargs)
+        except KeyboardInterrupt:
+            logging.info("Shutdown requested")
+        except Exception as e:
+            logging.critical(f"Server error: {e}")
+            sys.exit(1)
     except KeyboardInterrupt:
-        logging.info("Shutdown requested")
+        logging.info("Shutdown requested, bye...")
     except Exception as e:
         logging.critical(f"Server error: {e}")
-        sys.exit(1)
 
 
 if __name__ == "__main__":
