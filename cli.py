@@ -11,6 +11,9 @@ import pyfiglet
 import yaml
 import uvicorn
 from colorama import Fore
+from fastapi.templating import Jinja2Templates
+from jinja2 import Environment, FileSystemLoader
+from starlette.templating import _TemplateResponse
 
 
 def print_banner():
@@ -125,7 +128,7 @@ def main() -> None:
         logging.info(f"Configuring '{selected['name']}':")
         context = {}
         for key, default_val in defaults.items():
-            prompt = f"  • {key} [{default_val}]: "
+            prompt = f"  • {key} [by default: {default_val}]: "
             val = input(prompt).strip()
             context[key] = val if val else default_val
 
