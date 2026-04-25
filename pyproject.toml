@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0,<75", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,59 +17,39 @@ classifiers = [
     "Topic :: Software Development :: Libraries"
 ]
 authors = [
-    {name = "Mark", email = "levmarkpost@gmail.com"}
+    { name = "Mark", email = "levmarkpost@gmail.com" }
 ]
 dependencies = [
-    "argparse>=1.4.0",
     "colorama>=0.4.6",
-    "fastapi>=0.136.1",
-    "jinja2>=3.1.6",
-    "pyfiglet>=1.0.4",
-    "python-telegram-bot>=22.7",
-    "pyyaml>=6.0.3",
-    "uvicorn>=0.46.0",
+    "fastapi>=0.100.0",
+    "jinja2>=3.1.2",
+    "pyfiglet>=1.0.2",
+    "python-telegram-bot>=20.0",
+    "pyyaml>=6.0",
+    "uvicorn>=0.22.0",
 ]
 
-[dependency-groups]
-dev = [
-    "ruff>=0.15.12",
-]
+[tool.setuptools]
+packages = ["server"]
+py-modules = ["cli"]
 
+[tool.setuptools.package-data]
+"*" = ["js/*", "templates/**/*", "geoconf.yaml"]
+
+[project.scripts]
+georecon = "cli:main"
+
+[project.urls]
+Homepage = "https://github.com/MarkLevkovich/geo-recon"
 
 [tool.ruff]
 target-version = "py312"
-
 line-length = 88
-
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "venv",
-    "*.pyc",
-    "alembic",
-]
+exclude = [".git", ".venv", "__pycache__", "venv", "*.pyc"]
 
 [tool.ruff.lint]
-select = [
-    "E",     # pycodestyle
-    "F",     # pyflakes
-    "I",     # isort
-    "UP",    # pyupgrade
-    "B",     # flake8-bugbear
-    "SIM",   # flake8-simplify
-    "RUF",   # ruff
-]
-
-ignore = [
-    "F403",    # import *
-    "F405",    # names from import *
-    "E501",
-    "B008",
-    "B904",
-    "RUF001",
-    "RUF012",
-]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["F403", "F405", "E501", "B008", "B904", "RUF001", "RUF012"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
@@ -79,12 +59,3 @@ force-sort-within-sections = true
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
-
-[project.scripts]
-georecon = "cli:main"
-
-
-[project.urls]
-Homepage = "https://github.com/MarkLevkovich/geo-recon"
