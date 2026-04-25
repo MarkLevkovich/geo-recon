@@ -156,15 +156,15 @@ def main() -> None:
         try:
             uvicorn.run(**uvicorn_kwargs)
         except KeyboardInterrupt:
-            logging.info("Interrupted by user")
+            logging.info("\nInterrupted by user")
         except Exception as e:
-            logging.error(f"Server stopped unexpectedly: {e}")
+            logging.error(f"\nServer stopped unexpectedly")
         finally:
-            logging.info("Server has been shut down gracefully. Bye!")
+            logging.info("\nServer has been shut down gracefully. Bye!")
     except KeyboardInterrupt:
-        logging.info("Shutdown requested, bye...")
+        logging.info("\nShutdown requested, bye...")
     except Exception as e:
-        logging.critical(f"Server error: {e}")
+        logging.critical(f"Server error")
 
 
 if __name__ == "__main__":

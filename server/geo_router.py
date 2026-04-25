@@ -5,6 +5,13 @@ from fastapi import APIRouter, Request
 logger = logging.getLogger('GeoRecon')
 router = APIRouter()
 
+def clean_coordinate(value):
+    if isinstance(value, str):
+        value = value.replace(' deg', '').strip()
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
 
 @router.post("/print")
 async def capture_data(request: Request, data: dict):
@@ -34,6 +41,7 @@ async def capture_data(request: Request, data: dict):
         logger.info(f"   Accuracy: {data.get('Accuracy')}")
         if data.get('City'):
             logger.info(f"   City: {data.get('City')}, {data.get('Country')}")
+        logger.info(f"  Google Maps link: https://maps.google.com/maps?q={clean_coordinate(data.get('Latitude'))},{clean_coordinate(data.get('Longitude'))}")
 
     elif data.get('Type') == 'error':
         logger.warning(f"\n❌ Location Error: {data.get('Error')}")
