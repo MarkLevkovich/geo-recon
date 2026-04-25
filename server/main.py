@@ -1,17 +1,15 @@
-import datetime
-import json
-import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from colorama import Fore, Style
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
 from server.geo_router import router as geo_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -36,7 +34,9 @@ app: FastAPI = FastAPI(
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+async def http_exception_handler(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
     """Handle HTTP exceptions with clean JSON response."""
     return JSONResponse(
         status_code=exc.status_code,
@@ -58,17 +58,13 @@ async def health_check(request: Request) -> dict[str, Any]:
     info_data = request.app.state.context
     session_dir = request.app.state.template_dir
 
-    return {
-        "status": "ok",
-        "session_info": info_data,
-        "session_dir": session_dir
-    }
+    return {"status": "ok", "session_info": info_data, "session_dir": session_dir}
 
 
 @app.get("/", tags=["frontend"])
 async def serve_frontend(request: Request) -> Any:
     context: dict[str, Any] = getattr(request.app.state, "context", {})
-    templates: Jinja2Templates = getattr(request.app.state, "templates")
+    templates: Jinja2Templates = request.app.state.templates
 
     return templates.TemplateResponse(
         request=request,
