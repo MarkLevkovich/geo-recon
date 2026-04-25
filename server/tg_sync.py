@@ -1,9 +1,7 @@
 import json
 import logging
 import os
-import asyncio
 from pathlib import Path
-from typing import Optional
 
 import httpx
 from telegram import Bot
@@ -21,12 +19,12 @@ class TgBot:
 
     DEFAULT_CONFIG_PATH = Path.home() / ".geo_recon.conf"
 
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Path | None = None):
         self.config_path = config_path or self.DEFAULT_CONFIG_PATH
-        self._token: Optional[str] = None
-        self._chat_id: Optional[int] = None
+        self._token: str | None = None
+        self._chat_id: int | None = None
         self._enabled: bool = False
-        self._bot: Optional[Bot] = None
+        self._bot: Bot | None = None
         self._load_config()
 
     def _load_config(self) -> None:
@@ -34,7 +32,7 @@ class TgBot:
             return
 
         try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 data = json.load(f)
         except (json.JSONDecodeError, OSError):
             return
@@ -67,7 +65,9 @@ class TgBot:
     # for cli
     def setup_interactive(self) -> bool:
         if self._load_config():
-            use_exist = input("There is already telegram config, do you want to use it? [y/n] -> ")
+            use_exist = input(
+                "There is already telegram config, do you want to use it? [y/n] -> "
+            )
             if use_exist.lower() != "n":
                 logger.info("Telegram configuration loaded.")
                 return True
@@ -95,8 +95,8 @@ class TgBot:
                 return False
             bot_info = response.json().get("result")
             logger.info(f"Bot @{bot_info['username']} verified.")
-        except (httpx.HTTPStatusError, json.JSONDecodeError) as e:
-            logger.error(f"Failed to get bot info")
+        except (httpx.HTTPStatusError, json.JSONDecodeError):
+            logger.error("Failed to get bot info")
 
         chat_id_str = input("Enter target chat ID (numeric): ").strip()
         try:
@@ -106,21 +106,13 @@ class TgBot:
             return False
 
         # Persist configuration
-        data = {
-            "token": token,
-            "chat_id": chat_id,
-            "enabled": True
-        }
+        data = {"token": token, "chat_id": chat_id, "enabled": True}
         self._save_config(data)
         self._load_config()  # refresh internal state
         logger.info("Telegram configuration saved and activated.")
         return True
 
-    async def send_message(
-            self,
-            text: str,
-            disable_web_page_preview: bool = True
-    ):
+    async def send_message(self, text: str, disable_web_page_preview: bool = True):
         """
         Send a message to the configured Telegram chat asynchronously.
         Returns True on successful delivery, False otherwise.
@@ -133,7 +125,7 @@ class TgBot:
                 chat_id=self._chat_id,
                 text=text,
                 disable_web_page_preview=disable_web_page_preview,
-                parse_mode="HTML"
+                parse_mode="HTML",
             )
             return True
         except TelegramError as e:
@@ -142,5 +134,6 @@ class TgBot:
 
     def configure_app_state(self, app) -> None:
         app.state.use_tg = self.enabled
+
 
 tgBot = TgBot()

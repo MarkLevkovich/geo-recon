@@ -4,18 +4,15 @@
 import argparse
 import json
 import logging
-import sys
 from pathlib import Path
+import sys
 
-import pyfiglet
-import yaml
-import uvicorn
 from colorama import Fore
-from fastapi.templating import Jinja2Templates
-from jinja2 import Environment, FileSystemLoader
-from starlette.templating import _TemplateResponse
+import pyfiglet
+import uvicorn
+import yaml
 
-from server.tg_sync import TgBot, tgBot
+from server.tg_sync import tgBot
 
 
 def print_banner():
@@ -82,7 +79,14 @@ def setup_logging(level: str) -> None:
         force=True,
     )
     # Suppress ALL uvicorn and third-party logs
-    for name in ("uvicorn", "uvicorn.access", "uvicorn.error", "uvicorn.asgi", "watchfiles", "httpx"):
+    for name in (
+        "uvicorn",
+        "uvicorn.access",
+        "uvicorn.error",
+        "uvicorn.asgi",
+        "watchfiles",
+        "httpx",
+    ):
         logging.getLogger(name).setLevel(logging.CRITICAL)
 
 
@@ -90,9 +94,13 @@ def merge_config(cli_args: argparse.Namespace) -> dict:
     """Merge CLI args with YAML config. CLI has priority."""
     yaml_cfg = load_config(cli_args.config)
     return {
-        "host": cli_args.host if cli_args.host != "0.0.0.0" else yaml_cfg.get("host", "0.0.0.0"),
+        "host": cli_args.host
+        if cli_args.host != "0.0.0.0"
+        else yaml_cfg.get("host", "0.0.0.0"),
         "port": cli_args.port if cli_args.port != 8000 else yaml_cfg.get("port", 8000),
-        "log_level": cli_args.log_level if cli_args.log_level != "info" else yaml_cfg.get("log_level", "info"),
+        "log_level": cli_args.log_level
+        if cli_args.log_level != "info"
+        else yaml_cfg.get("log_level", "info"),
         "no_access_log": cli_args.no_access_log or yaml_cfg.get("no_access_log", False),
     }
 
@@ -116,7 +124,6 @@ def main() -> None:
             logging.info(f"  [{i}] {t['name']}")
 
         try:
-
             idx = int(input("[>] "))
             if not (0 <= idx < len(templates)):
                 raise ValueError
@@ -143,10 +150,10 @@ def main() -> None:
 
         try:
             from server.main import app as geo_app
+
             geo_app.state.template_dir = f"templates/{dir_name}"
             geo_app.state.context = context
             tgBot.configure_app_state(geo_app)
-
 
         except ImportError as e:
             logging.error(f"Failed to import application: {e}")
@@ -168,14 +175,14 @@ def main() -> None:
             uvicorn.run(**uvicorn_kwargs)
         except KeyboardInterrupt:
             logging.info("\nInterrupted by user")
-        except Exception as e:
-            logging.error(f"\nServer stopped unexpectedly")
+        except Exception:
+            logging.error("\nServer stopped unexpectedly")
         finally:
             logging.info("\nServer has been shut down gracefully. Bye!")
     except KeyboardInterrupt:
         logging.info("\nShutdown requested, bye...")
-    except Exception as e:
-        logging.critical(f"Server error")
+    except Exception:
+        logging.critical("Server error")
 
 
 if __name__ == "__main__":
