@@ -15,6 +15,8 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader
 from starlette.templating import _TemplateResponse
 
+from server.tg_sync import TgBot, tgBot
+
 
 def print_banner():
     font = "slant"
@@ -80,7 +82,7 @@ def setup_logging(level: str) -> None:
         force=True,
     )
     # Suppress ALL uvicorn and third-party logs
-    for name in ("uvicorn", "uvicorn.access", "uvicorn.error", "uvicorn.asgi", "watchfiles"):
+    for name in ("uvicorn", "uvicorn.access", "uvicorn.error", "uvicorn.asgi", "watchfiles", "httpx"):
         logging.getLogger(name).setLevel(logging.CRITICAL)
 
 
@@ -133,10 +135,19 @@ def main() -> None:
             val = input(prompt).strip()
             context[key] = val if val else default_val
 
+        use_tg = input("\nDo you want to duplicate msgs to Telegram? [y/n] -> ")
+        if use_tg == "y":
+            tgBot.setup_interactive()
+        else:
+            logging.info("Ok, process without Telegram")
+
         try:
             from server.main import app as geo_app
             geo_app.state.template_dir = f"templates/{dir_name}"
             geo_app.state.context = context
+            tgBot.configure_app_state(geo_app)
+
+
         except ImportError as e:
             logging.error(f"Failed to import application: {e}")
             sys.exit(1)
