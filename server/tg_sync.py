@@ -67,9 +67,15 @@ class TgBot:
     # for cli
     def setup_interactive(self) -> bool:
         if self._load_config():
-            logger.info("Telegram configuration loaded.")
-            return True
+            use_exist = input("There is already telegram config, do you want to use it? [y/n] -> ")
+            if use_exist.lower() != "n":
+                logger.info("Telegram configuration loaded.")
+                return True
 
+            self._token = None
+            self._chat_id = None
+            self._enabled = False
+            self._bot = None
 
         logger.info("=== Telegram bot setup ===")
         token = input("Enter bot token: ").strip()
@@ -131,7 +137,7 @@ class TgBot:
             )
             return True
         except TelegramError as e:
-            logger.error(f"Failed to send message")
+            logger.error(f"Failed to send message {e}")
             return False
 
     def configure_app_state(self, app) -> None:
