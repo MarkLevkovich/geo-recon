@@ -1,9 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0,<75", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "geo-recon"
+name = "georecon"
 version = "0.1.0"
-description = "Add your description here"
+description = "Asynchronous geolocation capture service for OSINT investigations. Serve convincing phishing pages to capture visitor device information and GPS coordinates."
 readme = "README.md"
 requires-python = ">=3.12"
+keywords = ["gps", "geo", "python", "hack", "osint"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries"
+]
+authors = [
+    {name = "Mark", email = "levmarkpost@gmail.com"}
+]
 dependencies = [
     "argparse>=1.4.0",
     "colorama>=0.4.6",
@@ -20,14 +35,12 @@ dev = [
     "ruff>=0.15.12",
 ]
 
+
 [tool.ruff]
-# Версия Python, под которую пишем
 target-version = "py312"
 
-# Длина строки (как у black по умолчанию)
 line-length = 88
 
-# Директории, которые не нужно проверять
 exclude = [
     ".git",
     ".venv",
@@ -60,7 +73,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["server"]      # заменить на имя твоего корневого пакета
+known-first-party = ["server"]
 force-sort-within-sections = true
 
 [tool.ruff.format]
@@ -68,3 +81,10 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[project.scripts]
+georecon = "cli:main"
+
+
+[project.urls]
+Homepage = "https://github.com/MarkLevkovich/geo-recon"
