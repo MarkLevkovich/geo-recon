@@ -18,6 +18,13 @@
         "email": "my@gmail.com",
         "redirect_url": "https://myaccount.google.com"
       }
+    },
+    {
+      "name": "NearYou",
+      "dir_name": "near_you",
+      "defaults": {
+        "redirect_url": "https://www.zenly.com"
+      }
     }
   ]
 }
