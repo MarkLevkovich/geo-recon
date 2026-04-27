@@ -10,6 +10,14 @@
         "image": "static/avatar.jpg",
         "redirect_url": "https://web.telegram.org"
       }
+    },
+    {
+      "name": "GoogleDisk",
+      "dir_name": "gdisk",
+      "defaults": {
+        "email": "my@gmail.com",
+        "redirect_url": "https://myaccount.google.com"
+      }
     }
   ]
 }
